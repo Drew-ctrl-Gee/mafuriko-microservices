@@ -1,6 +1,7 @@
 """MafurikoAI Chatbot Brain"""
 from datetime import datetime
-
+import os
+GATEWAY_URL = os.getenv('API_GATEWAY_URL', 'http://localhost:5000')
 
 class Chatbot:
     def __init__(self, predictor, weather_api):
