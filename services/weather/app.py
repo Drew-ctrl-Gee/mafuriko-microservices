@@ -22,7 +22,7 @@ def health():
 
 @app.route('/api/weather/<city>', methods=['GET'])
 def get_weather(city):
-    api_key = os.getenv('7b6385a21323babda268827bf3f33ae1', '')
+    api_key = os.getenv('OPENWEATHER_API_KEY', '')
     
     if not api_key:
         return jsonify(_mock_weather(city))
