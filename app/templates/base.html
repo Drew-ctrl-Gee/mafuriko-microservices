@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MafurikoAI{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    
+    <!-- Weather Animation Background -->
+    <div class="weather-bg">
+        <div class="rain">
+            <div class="drop"></div>
+            <div class="drop"></div>
+            <div class="drop"></div>
+            <div class="drop"></div>
+            <div class="drop"></div>
+        </div>
+        <div class="clouds">
+            <div class="cloud cloud-1">☁️</div>
+            <div class="cloud cloud-2">⛅</div>
+            <div class="cloud cloud-3">🌤️</div>
+        </div>
+    </div>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

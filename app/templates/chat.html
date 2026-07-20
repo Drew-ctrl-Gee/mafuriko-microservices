@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - MafurikoAI{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-mini">🌧️</div>
+            <h2>MafurikoAI</h2>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar">{{ user.username[0].upper() }}</div>
+            <div class="user-info">
+                <h3>{{ user.username }}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> {{ user.location }}</p>
+            </div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <h4>Navigation</h4>
+            <a href="{{ url_for('main.chat') }}" class="menu-btn active">
+                <i class="fas fa-comments"></i> Chat
+            </a>
+            <a href="{{ url_for('main.map_view') }}" class="menu-btn">
+                <i class="fas fa-map-marked-alt"></i> Kenya Map
+            </a>
+            <a href="{{ url_for('main.analytics') }}" class="menu-btn">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+                <a href="{{ url_for('main.profile') }}" class="menu-btn">
+        <i class="fas fa-user-cog"></i> Profile
+    </a>
+        </div>
+        
+        <div class="sidebar-menu">
+            <h4>Quick Actions</h4>
+            <button class="menu-btn" onclick="sendQuickMessage('Check weather in Nairobi')">
+                <i class="fas fa-cloud-rain"></i> Check Weather
+            </button>
+            <button class="menu-btn" onclick="sendQuickMessage('Is Thika Road safe?')">
+                <i class="fas fa-road"></i> Check Road
+            </button>
+            <button class="menu-btn" onclick="sendQuickMessage('Emergency contacts')">
+                <i class="fas fa-phone-alt"></i> Emergency
+            </button>
+            <button class="menu-btn" onclick="sendQuickMessage('Safety tips')">
+                <i class="fas fa-shield-alt"></i> Safety Tips
+            </button>
+        </div>
+        
+        <div class="sidebar-menu">
+            <h4>Language / Lugha</h4>
+            <div class="lang-toggle">
+                <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">🇬🇧 English</button>
+                <button class="lang-btn" data-lang="sw" onclick="setLanguage('sw')">🇰🇪 Swahili</button>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Chat Area -->
+    <main class="chat-main">
+        <div class="chat-header">
+            <div>
+                <h2>💬 Chat with MafurikoAI</h2>
+                <p class="chat-subtitle">Ask about weather, floods, or safe routes</p>
+            </div>
+            <div class="weather-badge" id="weatherBadge">
+                <i class="fas fa-cloud"></i> Loading...
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <p>👋 <strong>Habari, {{ user.username }}!</strong> I'm MafurikoAI, your flood safety assistant for Kenya.</p>
+                    <p>I can help you with:</p>
+                    <ul>
+                        <li>🌧️ Real-time weather updates</li>
+                        <li>🛣️ Flood risk on any Kenyan road</li>
+                        <li>🗺️ Safe route recommendations</li>
+                        <li>🚨 Emergency contacts</li>
+                        <li>🛡️ Safety tips</li>
+                    </ul>
+                    <p>What would you like to know?</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <button class="voice-btn" onclick="toggleVoiceInput()" title="Voice Input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <input type="text" id="messageInput" placeholder="Type your message... (e.g., Is Mombasa Road safe?)" 
+                       onkeypress="if(event.key==='Enter') sendMessage()">
+                <button class="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

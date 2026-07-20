@@ -1,0 +1,100 @@
+services:
+  # Auth Service
+  auth-service:
+    build: ./services/auth
+    container_name: mafuriko-auth
+    ports:
+      - "5001:5001"
+    environment:
+      - SECRET_KEY=mafuriko-super-secret-key-2025
+      - DATABASE_URL=sqlite:///mafuriko.db
+      - PORT=5001
+    volumes:
+      - ./services/auth:/app  # Mount code for live updates
+      - auth-data:/app/data
+    networks:
+      - mafuriko-network
+    mem_limit: 512m
+    restart: unless-stopped
+
+  # Weather Service
+  weather-service:
+    build: ./services/weather
+    container_name: mafuriko-weather
+    ports:
+      - "5002:5002"
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
+      - PORT=5002
+    volumes:
+      - ./services/weather:/app  # Live updates
+    networks:
+      - mafuriko-network
+    mem_limit: 256m
+    restart: unless-stopped
+
+  # ML Service
+  ml-service:
+    build: ./services/ml
+    container_name: mafuriko-ml
+    ports:
+      - "5003:5003"
+    environment:
+      - PORT=5003
+    volumes:
+      - ./services/ml:/app  # Live updates - so we can add model files!
+    networks:
+      - mafuriko-network
+    mem_limit: 1g  # More memory for ML model
+    restart: unless-stopped
+
+  # Chatbot Service
+  chatbot-service:
+    build: ./services/chatbot
+    container_name: mafuriko-chatbot
+    ports:
+      - "5004:5004"
+    environment:
+      - WEATHER_SERVICE_URL=http://weather-service:5002
+      - ML_SERVICE_URL=http://ml-service:5003
+      - PORT=5004
+    volumes:
+      - ./services/chatbot:/app  # Live updates
+    depends_on:
+      - weather-service
+      - ml-service
+    networks:
+      - mafuriko-network
+    mem_limit: 256m
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build: ./services/gateway
+    container_name: mafuriko-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - WEATHER_SERVICE_URL=http://weather-service:5002
+      - ML_SERVICE_URL=http://ml-service:5003
+      - CHATBOT_SERVICE_URL=http://chatbot-service:5004
+      - PORT=5000
+    volumes:
+      - ./services/gateway:/app  # Live updates
+    depends_on:
+      - auth-service
+      - weather-service
+      - ml-service
+      - chatbot-service
+    networks:
+      - mafuriko-network
+    mem_limit: 256m
+    restart: unless-stopped
+
+networks:
+  mafuriko-network:
+    driver: bridge
+
+volumes:
+  auth-data:

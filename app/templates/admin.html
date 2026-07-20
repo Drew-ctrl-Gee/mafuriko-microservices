@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - MafurikoAI{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-mini">🌧️</div>
+            <h2>MafurikoAI</h2>
+            <span class="admin-badge">ADMIN</span>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar admin-avatar">{{ user.username[0].upper() }}</div>
+            <div class="user-info">
+                <h3>{{ user.username }}</h3>
+                <p><i class="fas fa-crown"></i> Administrator</p>
+            </div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <h4>Menu</h4>
+            <a href="{{ url_for('main.admin') }}" class="menu-btn active">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="{{ url_for('main.analytics') }}" class="menu-btn">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+            <a href="{{ url_for('main.admin_sms_page') }}" class="menu-btn">
+                <i class="fas fa-sms"></i> SMS Broadcast
+            </a>
+            <a href="{{ url_for('main.map_view') }}" class="menu-btn">
+                <i class="fas fa-map-marked-alt"></i> Kenya Map
+            </a>
+            <a href="{{ url_for('main.profile') }}" class="menu-btn">
+                <i class="fas fa-user-cog"></i> Profile
+            </a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+    
+    <main class="admin-main">
+        <div class="admin-header">
+            <h1>👨‍💼 Admin Dashboard</h1>
+            <p>Welcome back, {{ user.username }}!</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card stat-blue">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.total_users }}</h3>
+                    <p>Total Users</p>
+                </div>
+            </div>
+            
+            <div class="stat-card stat-purple">
+                <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.total_chats }}</h3>
+                    <p>Total Chats</p>
+                </div>
+            </div>
+            
+            <div class="stat-card stat-orange">
+                <div class="stat-icon"><i class="fas fa-flag"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.total_reports }}</h3>
+                    <p>Flood Reports</p>
+                </div>
+            </div>
+            
+            <div class="stat-card stat-green">
+                <div class="stat-icon"><i class="fas fa-road"></i></div>
+                <div class="stat-content">
+                    <h3>930+</h3>
+                    <p>Roads Monitored</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <h2><i class="fas fa-history"></i> Recent Conversations</h2>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Message</th>
+                            <th>Road</th>
+                            <th>Risk Level</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chat in recent_chats %}
+                        <tr>
+                            <td>{{ chat.user_id }}</td>
+                            <td>{{ chat.message[:50] }}{% if chat.message|length > 50 %}...{% endif %}</td>
+                            <td>{{ chat.road_queried or 'N/A' }}</td>
+                            <td>
+                                {% if chat.risk_level == 'high' %}
+                                    <span class="badge badge-danger">HIGH</span>
+                                {% elif chat.risk_level == 'medium' %}
+                                    <span class="badge badge-warning">MEDIUM</span>
+                                {% elif chat.risk_level == 'low' %}
+                                    <span class="badge badge-success">LOW</span>
+                                {% else %}
+                                    <span class="badge">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ chat.timestamp.strftime('%Y-%m-%d %H:%M') if chat.timestamp else 'N/A' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding: 30px;">No chats yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

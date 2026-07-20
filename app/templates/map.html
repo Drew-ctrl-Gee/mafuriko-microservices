@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Kenya Map - MafurikoAI{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-mini">🌧️</div>
+            <h2>MafurikoAI</h2>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar">{{ user.username[0].upper() }}</div>
+            <div class="user-info">
+                <h3>{{ user.username }}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> {{ user.location }}</p>
+            </div>
+        </div>
+        
+       <div class="sidebar-menu">
+    <h4>Navigation</h4>
+    <a href="{{ url_for('main.chat') }}" class="menu-btn">
+        <i class="fas fa-comments"></i> Chat
+    </a>
+    <a href="{{ url_for('main.map_view') }}" class="menu-btn active">
+        <i class="fas fa-map-marked-alt"></i> Kenya Map
+    </a>
+    <a href="{{ url_for('main.analytics') }}" class="menu-btn">
+        <i class="fas fa-chart-line"></i> Analytics
+    </a>
+        <a href="{{ url_for('main.profile') }}" class="menu-btn">
+        <i class="fas fa-user-cog"></i> Profile
+    </a>
+</div>
+        
+        <div class="sidebar-menu">
+            <h4>Risk Legend</h4>
+            <div class="legend-item">
+                <span class="legend-dot legend-high"></span>
+                <span>🔴 High Risk</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot legend-medium"></span>
+                <span>🟡 Medium Risk</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot legend-low"></span>
+                <span>🟢 Safe</span>
+            </div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <h4>Statistics</h4>
+            <div class="mini-stats">
+                <div class="mini-stat">
+                    <div class="mini-stat-value" id="totalCities">--</div>
+                    <div class="mini-stat-label">Cities</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-value" id="highRiskCount">--</div>
+                    <div class="mini-stat-label">High Risk</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Map Area -->
+    <main class="chat-main">
+        <div class="chat-header">
+            <div>
+                <h2>🗺️ Kenya Flood Risk Map</h2>
+                <p class="chat-subtitle">Real-time flood predictions across Kenya</p>
+            </div>
+            <button class="refresh-btn" onclick="loadMapData()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+        
+        <div class="map-container">
+            <div id="loadingMsg" style="text-align: center; padding: 50px; color: white;">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <h3 style="margin-top: 20px;">Loading Kenya Map...</h3>
+            </div>
+            <div id="kenyaMap" style="height: calc(100vh - 200px); width: 100%; display: none;"></div>
+        </div>
+    </main>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+.map-container {
+    padding: 20px;
+    background: rgba(255,255,255,0.05);
+}
+
+#kenyaMap {
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.legend-dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+}
+
+.legend-high { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; }
+.legend-medium { background: #f39c12; box-shadow: 0 0 10px #f39c12; }
+.legend-low { background: #27ae60; box-shadow: 0 0 10px #27ae60; }
+
+.mini-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.mini-stat {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.mini-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.mini-stat-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 5px;
+}
+
+.refresh-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+}
+
+.leaflet-popup-content {
+    font-family: 'Poppins', sans-serif;
+    min-width: 220px;
+}
+
+.popup-header {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    padding: 12px;
+    margin: -13px -20px 10px -20px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.popup-risk {
+    padding: 10px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    text-align: center;
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+.popup-risk-high { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.popup-risk-medium { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.popup-risk-low { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+
+.popup-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.popup-info-item {
+    background: #f0f4f8;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+</style>
+
+<script>
+let map;
+let markers = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    loadMapData();
+});
+
+function initMap() {
+    map = L.map('kenyaMap').setView([-0.0236, 37.9062], 6);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap | MafurikoAI 🇰🇪',
+        maxZoom: 18,
+    }).addTo(map);
+}
+
+async function loadMapData() {
+    try {
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+        
+        document.getElementById('loadingMsg').style.display = 'block';
+        document.getElementById('kenyaMap').style.display = 'none';
+        
+        const response = await fetch('/api/map/data');
+        const data = await response.json();
+        
+        let highRiskCount = 0;
+        
+        data.forEach(city => {
+            const color = getRiskColor(city.risk_level);
+            
+            if (city.risk_level === 'high') highRiskCount++;
+            
+            const marker = L.circleMarker([city.lat, city.lng], {
+                radius: 15,
+                fillColor: color,
+                color: 'white',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+            
+            const popupContent = `
+                <div>
+                    <div class="popup-header">📍 ${city.name}</div>
+                    <div style="color: #666; font-size: 0.85rem; margin-bottom: 5px; text-align: center;">${city.county} County</div>
+                    
+                    <div class="popup-risk popup-risk-${city.risk_level}">
+                        ${getRiskEmoji(city.risk_level)} ${city.risk_level.toUpperCase()} RISK
+                    </div>
+                    
+                    <div style="text-align: center; color: #666; margin: 8px 0; font-size: 0.85rem;">
+                        Confidence: <strong>${city.confidence}%</strong>
+                    </div>
+                    
+                    <div class="popup-info">
+                        <div class="popup-info-item">🌡️ ${city.temperature}°C</div>
+                        <div class="popup-info-item">💧 ${city.humidity}%</div>
+                        <div class="popup-info-item">🌧️ ${city.rainfall}mm</div>
+                        <div class="popup-info-item">☁️ ${city.description}</div>
+                    </div>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            markers.push(marker);
+        });
+        
+        document.getElementById('totalCities').textContent = data.length;
+        document.getElementById('highRiskCount').textContent = highRiskCount;
+        
+        document.getElementById('loadingMsg').style.display = 'none';
+        document.getElementById('kenyaMap').style.display = 'block';
+        
+        map.invalidateSize();
+        
+    } catch (error) {
+        console.error('Map error:', error);
+        document.getElementById('loadingMsg').innerHTML = '<p style="color:red;">Error loading map</p>';
+    }
+}
+
+function getRiskColor(level) {
+    return {'high': '#e74c3c', 'medium': '#f39c12', 'low': '#27ae60'}[level] || '#95a5a6';
+}
+
+function getRiskEmoji(level) {
+    return {'high': '🔴', 'medium': '🟡', 'low': '🟢'}[level] || '⚪';
+}
+
+setInterval(loadMapData, 300000);
+</script>
+{% endblock %}

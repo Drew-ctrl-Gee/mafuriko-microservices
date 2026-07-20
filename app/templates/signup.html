@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - MafurikoAI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card auth-card-large">
+        
+        <div class="auth-logo">
+            <div class="logo-icon">🌧️</div>
+            <h1 class="logo-text">Mafuriko<span>AI</span></h1>
+            <p class="logo-tagline">Join thousands staying safe from floods 🇰🇪</p>
+        </div>
+        
+        <form method="POST" class="auth-form">
+            <h2 class="form-title">Create Account</h2>
+            <p class="form-subtitle">Get real-time flood alerts for your area</p>
+            
+            <div class="form-row">
+                <div class="input-group">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" name="email" placeholder="Email" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="input-group">
+                    <i class="fas fa-phone input-icon"></i>
+                    <input type="tel" name="phone" placeholder="Phone (+254...)">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-map-marker-alt input-icon"></i>
+                    <select name="location" required>
+                        <option value="Nairobi">Nairobi</option>
+                        <option value="Mombasa">Mombasa</option>
+                        <option value="Kisumu">Kisumu</option>
+                        <option value="Nakuru">Nakuru</option>
+                        <option value="Eldoret">Eldoret</option>
+                        <option value="Thika">Thika</option>
+                        <option value="Machakos">Machakos</option>
+                        <option value="Nyeri">Nyeri</option>
+                        <option value="Meru">Meru</option>
+                        <option value="Kakamega">Kakamega</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" name="password" placeholder="Password (min 6 chars)" required minlength="6">
+                <i class="fas fa-eye toggle-password" onclick="togglePassword(this)"></i>
+            </div>
+            
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{{ url_for('main.login') }}">Login here</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function togglePassword(icon) {
+    const input = icon.previousElementSibling.previousElementSibling;
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    }
+}
+</script>
+{% endblock %}

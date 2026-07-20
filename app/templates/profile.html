@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - MafurikoAI{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-mini">🌧️</div>
+            <h2>MafurikoAI</h2>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar">{{ user.username[0].upper() }}</div>
+            <div class="user-info">
+                <h3>{{ user.username }}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> <span id="sidebarLocation">{{ user.location }}</span></p>
+            </div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <h4>Navigation</h4>
+            <a href="{{ url_for('main.chat') }}" class="menu-btn">
+                <i class="fas fa-comments"></i> Chat
+            </a>
+            <a href="{{ url_for('main.map_view') }}" class="menu-btn">
+                <i class="fas fa-map-marked-alt"></i> Kenya Map
+            </a>
+            <a href="{{ url_for('main.analytics') }}" class="menu-btn">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+            <a href="{{ url_for('main.profile') }}" class="menu-btn active">
+                <i class="fas fa-user-cog"></i> Profile
+            </a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Profile Area -->
+    <main class="chat-main">
+        <div class="chat-header">
+            <div>
+                <h2>👤 My Profile</h2>
+                <p class="chat-subtitle">Manage your account settings</p>
+            </div>
+        </div>
+        
+        <div class="profile-content">
+            
+            <!-- Success/Error Messages -->
+            <div id="statusMessage"></div>
+            
+            <!-- Personal Info Card -->
+            <div class="profile-card">
+                <h3><i class="fas fa-user"></i> Personal Information</h3>
+                
+                <form id="profileForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" value="{{ user.username }}" disabled>
+                            <small>Cannot be changed</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email" value="{{ user.email }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-phone"></i> Phone Number</label>
+                            <input type="tel" id="phone" value="{{ user.phone or '' }}" placeholder="+254...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Current Location</label>
+                            <select id="location" required>
+                                <option value="Nairobi" {% if user.location == 'Nairobi' %}selected{% endif %}>Nairobi</option>
+                                <option value="Mombasa" {% if user.location == 'Mombasa' %}selected{% endif %}>Mombasa</option>
+                                <option value="Kisumu" {% if user.location == 'Kisumu' %}selected{% endif %}>Kisumu</option>
+                                <option value="Nakuru" {% if user.location == 'Nakuru' %}selected{% endif %}>Nakuru</option>
+                                <option value="Eldoret" {% if user.location == 'Eldoret' %}selected{% endif %}>Eldoret</option>
+                                <option value="Thika" {% if user.location == 'Thika' %}selected{% endif %}>Thika</option>
+                                <option value="Machakos" {% if user.location == 'Machakos' %}selected{% endif %}>Machakos</option>
+                                <option value="Nyeri" {% if user.location == 'Nyeri' %}selected{% endif %}>Nyeri</option>
+                                <option value="Meru" {% if user.location == 'Meru' %}selected{% endif %}>Meru</option>
+                                <option value="Kakamega" {% if user.location == 'Kakamega' %}selected{% endif %}>Kakamega</option>
+                                <option value="Kisii" {% if user.location == 'Kisii' %}selected{% endif %}>Kisii</option>
+                                <option value="Kericho" {% if user.location == 'Kericho' %}selected{% endif %}>Kericho</option>
+                                <option value="Malindi" {% if user.location == 'Malindi' %}selected{% endif %}>Malindi</option>
+                                <option value="Garissa" {% if user.location == 'Garissa' %}selected{% endif %}>Garissa</option>
+                                <option value="Naivasha" {% if user.location == 'Naivasha' %}selected{% endif %}>Naivasha</option>
+                                <option value="Lamu" {% if user.location == 'Lamu' %}selected{% endif %}>Lamu</option>
+                            </select>
+                            <small>💡 This affects your weather updates & recommendations</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-language"></i> Preferred Language</label>
+                        <select id="language">
+                            <option value="en" {% if user.language == 'en' %}selected{% endif %}>🇬🇧 English</option>
+                            <option value="sw" {% if user.language == 'sw' %}selected{% endif %}>🇰🇪 Kiswahili</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Change Password Card -->
+            <div class="profile-card">
+                <h3><i class="fas fa-lock"></i> Change Password</h3>
+                
+                <form id="passwordForm">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="currentPassword" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="newPassword" minlength="6" required>
+                            <small>Minimum 6 characters</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirmPassword" minlength="6" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Account Info Card -->
+            <div class="profile-card">
+                <h3><i class="fas fa-info-circle"></i> Account Information</h3>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Account Type</label>
+                        <span class="badge badge-info">{{ user.role|upper }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <label>Member Since</label>
+                        <span>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <label>Last Login</label>
+                        <span>{{ user.last_login.strftime('%B %d, %Y at %H:%M') if user.last_login else 'First login' }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <label>Account Status</label>
+                        <span class="badge badge-success">Active</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+</div>
+
+<style>
+.profile-content {
+    padding: 25px 30px;
+    overflow-y: auto;
+}
+
+.profile-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.profile-card h3 {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 1.3rem;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.profile-card h3 i {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    color: white;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group input,
+.form-group select {
+    padding: 12px 15px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4facfe;
+    background: rgba(0,0,0,0.4);
+}
+
+.form-group input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-group small {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+.form-group select option {
+    background: #1e3c72;
+    color: white;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 15px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+}
+
+.info-item label {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.info-item span {
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.badge-info {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+}
+
+.badge-success {
+    background: linear-gradient(135deg, #00b09b, #96c93d);
+    color: white;
+}
+
+#statusMessage {
+    margin-bottom: 20px;
+}
+
+.alert {
+    padding: 15px 20px;
+    border-radius: 10px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #00b09b, #96c93d);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Update Profile
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        location: document.getElementById('location').value,
+        language: document.getElementById('language').value
+    };
+    
+    try {
+        const response = await fetch('/api/profile/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage('success', '✅ ' + result.message);
+            // Update sidebar location
+            document.getElementById('sidebarLocation').textContent = data.location;
+        } else {
+            showMessage('danger', '❌ ' + result.message);
+        }
+    } catch (error) {
+        showMessage('danger', '❌ Error updating profile');
+    }
+});
+
+// Change Password
+document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showMessage('danger', '❌ New passwords do not match');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/profile/change-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage('success', '✅ ' + result.message);
+            document.getElementById('passwordForm').reset();
+        } else {
+            showMessage('danger', '❌ ' + result.message);
+        }
+    } catch (error) {
+        showMessage('danger', '❌ Error changing password');
+    }
+});
+
+function showMessage(type, message) {
+    const messageDiv = document.getElementById('statusMessage');
+    messageDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    
+    setTimeout(() => {
+        messageDiv.innerHTML = '';
+    }, 5000);
+    
+    // Scroll to top
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+{% endblock %}
