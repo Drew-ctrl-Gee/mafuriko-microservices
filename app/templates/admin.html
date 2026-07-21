@@ -36,17 +36,16 @@
         </div>
     </div>
     
-    <div class="admin-actions">
-        <h2>Quick Actions</h2>
-        <div class="action-buttons">
-            <a href="{{ url_for('main.chat') }}" class="action-btn">💬 Chat</a>
-            <a href="{{ url_for('main.map_view') }}" class="action-btn">🗺️ Map</a>
-            <a href="{{ url_for('main.analytics') }}" class="action-btn">📊 Analytics</a>
-            <a href="{{ url_for('main.admin_sms') }}" class="action-btn">📱 SMS</a>
-            <a href="{{ url_for('main.profile') }}" class="action-btn">👤 Profile</a>
-            <a href="{{ url_for('main.logout') }}" class="action-btn logout-btn">🚪 Logout</a>
-        </div>
+   <div class="admin-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-buttons">
+        <a href="{{ url_for('main.map_view') }}" class="action-btn">🗺️ Map</a>
+        <a href="{{ url_for('main.analytics') }}" class="action-btn">📊 Analytics</a>
+        <a href="{{ url_for('main.admin_sms') }}" class="action-btn">📱 SMS</a>
+        <a href="{{ url_for('main.profile') }}" class="action-btn">👤 Profile</a>
+        <a href="{{ url_for('main.logout') }}" class="action-btn logout-btn">🚪 Logout</a>
     </div>
+</div>
     
     {% if users %}
     <div class="admin-section">
