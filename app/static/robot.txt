@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /logout
+
+Sitemap: https://mafuriko-web.onrender.com/sitemap.xml

@@ -2,56 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MafurikoAI{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4facfe">
     
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#4facfe">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- SEO Meta Tags -->
+    <title>{% block title %}MafurikoAI - AI-Powered Flood Prediction for Kenya | Real-time Flood Alerts{% endblock %}</title>
+    <meta name="description" content="MafurikoAI is Kenya's leading AI-powered flood prediction system. Get real-time weather updates, flood risk assessments, and safe route recommendations in English and Kiswahili.">
+    <meta name="keywords" content="Kenya flood prediction, MafurikoAI, flood alerts Kenya, weather app Kenya, Nairobi flooding, Mombasa flood, AI weather Kenya, flood safety, mafuriko, Kenya weather, real-time flood alerts, road safety Kenya">
+    <meta name="author" content="MafurikoAI Team">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="en, sw">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="MafurikoAI - Kenya's AI Flood Prediction System">
+    <meta property="og:description" content="Real-time flood predictions and safety alerts for all 47 counties of Kenya. Available in English and Kiswahili.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mafuriko-web.onrender.com">
+    <meta property="og:site_name" content="MafurikoAI">
+    <meta property="og:locale" content="en_KE">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MafurikoAI - Kenya Flood Prediction">
+    <meta name="twitter:description" content="AI-powered flood alerts for Kenya. Free real-time predictions.">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mafuriko-web.onrender.com">
+    
+    <!-- Schema.org -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "MafurikoAI",
+      "description": "AI-powered flood prediction system for Kenya",
+      "url": "https://mafuriko-web.onrender.com",
+      "applicationCategory": "WeatherApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "KES"
+      }
+    }
+    </script>
+    
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    
-    <!-- Weather Animation Background -->
-    <div class="weather-bg">
-        <div class="rain">
-            <div class="drop"></div>
-            <div class="drop"></div>
-            <div class="drop"></div>
-            <div class="drop"></div>
-            <div class="drop"></div>
-        </div>
-        <div class="clouds">
-            <div class="cloud cloud-1">☁️</div>
-            <div class="cloud cloud-2">⛅</div>
-            <div class="cloud cloud-3">🌤️</div>
-        </div>
-    </div>
-    
-    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="flash-container">
+            <div class="flash-messages">
                 {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">
-                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                    <div class="alert alert-{{ category }}">
                         {{ message }}
-                        <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+                        <span class="close-flash" onclick="this.parentElement.style.display='none'">&times;</span>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
     {% endwith %}
     
-    <!-- Main Content -->
     {% block content %}{% endblock %}
     
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

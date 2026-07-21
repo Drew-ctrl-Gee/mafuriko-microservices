@@ -7,7 +7,7 @@ from flask_mail import Mail
 from config import Config
 import os
 
-# Initialize extensions (WITHOUT app)
+# Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
@@ -22,9 +22,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     
-    # ═══════════════════════════════════════════════════════
     # EMAIL CONFIGURATION
-    # ═══════════════════════════════════════════════════════
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'true').lower() == 'true'
@@ -33,33 +31,24 @@ def create_app(config_class=Config):
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
     
-    # ═══════════════════════════════════════════════════════
-    # DATABASE CONFIGURATION (Persistent!)
-    # ═══════════════════════════════════════════════════════
+    # DATABASE CONFIGURATION
     database_url = os.getenv('DATABASE_URL', 'sqlite:///mafuriko.db')
-    # Fix for PostgreSQL URL prefix
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # ═══════════════════════════════════════════════════════
-    # INITIALIZE EXTENSIONS WITH APP
-    # ═══════════════════════════════════════════════════════
+    # INITIALIZE EXTENSIONS
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
     CORS(app)
     
-    # ═══════════════════════════════════════════════════════
     # REGISTER BLUEPRINTS
-    # ═══════════════════════════════════════════════════════
     from app.routes import main
     app.register_blueprint(main)
     
-    # ═══════════════════════════════════════════════════════
     # CREATE DATABASE TABLES
-    # ═══════════════════════════════════════════════════════
     with app.app_context():
         db.create_all()
         create_default_admin(app)
