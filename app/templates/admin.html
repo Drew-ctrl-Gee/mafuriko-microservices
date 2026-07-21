@@ -3,130 +3,104 @@
 {% block title %}Admin Dashboard - MafurikoAI{% endblock %}
 
 {% block content %}
-<div class="admin-layout">
+<div class="admin-page">
     
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-mini">🌧️</div>
-            <h2>MafurikoAI</h2>
-            <span class="admin-badge">ADMIN</span>
-        </div>
-        
-        <div class="user-profile">
-            <div class="user-avatar admin-avatar">{{ user.username[0].upper() }}</div>
-            <div class="user-info">
-                <h3>{{ user.username }}</h3>
-                <p><i class="fas fa-crown"></i> Administrator</p>
-            </div>
-        </div>
-        
-        <div class="sidebar-menu">
-            <h4>Menu</h4>
-            <a href="{{ url_for('main.admin') }}" class="menu-btn active">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-            </a>
-            <a href="{{ url_for('main.analytics') }}" class="menu-btn">
-                <i class="fas fa-chart-line"></i> Analytics
-            </a>
-            <a href="{{ url_for('main.admin_sms_page') }}" class="menu-btn">
-                <i class="fas fa-sms"></i> SMS Broadcast
-            </a>
-            <a href="{{ url_for('main.map_view') }}" class="menu-btn">
-                <i class="fas fa-map-marked-alt"></i> Kenya Map
-            </a>
-            <a href="{{ url_for('main.profile') }}" class="menu-btn">
-                <i class="fas fa-user-cog"></i> Profile
-            </a>
-        </div>
-        
-        <div class="sidebar-footer">
-            <a href="{{ url_for('main.logout') }}" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </aside>
+    <div class="admin-header">
+        <h1>🎯 MafurikoAI Admin Dashboard</h1>
+        <p>Welcome back, {{ user.username }}! 👋</p>
+    </div>
     
-    <main class="admin-main">
-        <div class="admin-header">
-            <h1>👨‍💼 Admin Dashboard</h1>
-            <p>Welcome back, {{ user.username }}!</p>
+    <div class="admin-stats">
+        <div class="stat-box">
+            <span class="stat-emoji">👥</span>
+            <h3>Total Users</h3>
+            <p class="stat-number">{{ users|length if users else 0 }}</p>
         </div>
         
-        <div class="stats-grid">
-            <div class="stat-card stat-blue">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-content">
-                    <h3>{{ stats.total_users }}</h3>
-                    <p>Total Users</p>
-                </div>
-            </div>
-            
-            <div class="stat-card stat-purple">
-                <div class="stat-icon"><i class="fas fa-comments"></i></div>
-                <div class="stat-content">
-                    <h3>{{ stats.total_chats }}</h3>
-                    <p>Total Chats</p>
-                </div>
-            </div>
-            
-            <div class="stat-card stat-orange">
-                <div class="stat-icon"><i class="fas fa-flag"></i></div>
-                <div class="stat-content">
-                    <h3>{{ stats.total_reports }}</h3>
-                    <p>Flood Reports</p>
-                </div>
-            </div>
-            
-            <div class="stat-card stat-green">
-                <div class="stat-icon"><i class="fas fa-road"></i></div>
-                <div class="stat-content">
-                    <h3>930+</h3>
-                    <p>Roads Monitored</p>
-                </div>
-            </div>
+        <div class="stat-box">
+            <span class="stat-emoji">💬</span>
+            <h3>Total Chats</h3>
+            <p class="stat-number">{{ chats|length if chats else 0 }}</p>
         </div>
         
-        <div class="admin-section">
-            <h2><i class="fas fa-history"></i> Recent Conversations</h2>
-            <div class="table-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>User ID</th>
-                            <th>Message</th>
-                            <th>Road</th>
-                            <th>Risk Level</th>
-                            <th>Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for chat in recent_chats %}
-                        <tr>
-                            <td>{{ chat.user_id }}</td>
-                            <td>{{ chat.message[:50] }}{% if chat.message|length > 50 %}...{% endif %}</td>
-                            <td>{{ chat.road_queried or 'N/A' }}</td>
-                            <td>
-                                {% if chat.risk_level == 'high' %}
-                                    <span class="badge badge-danger">HIGH</span>
-                                {% elif chat.risk_level == 'medium' %}
-                                    <span class="badge badge-warning">MEDIUM</span>
-                                {% elif chat.risk_level == 'low' %}
-                                    <span class="badge badge-success">LOW</span>
-                                {% else %}
-                                    <span class="badge">N/A</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ chat.timestamp.strftime('%Y-%m-%d %H:%M') if chat.timestamp else 'N/A' }}</td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding: 30px;">No chats yet</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="stat-box">
+            <span class="stat-emoji">🌍</span>
+            <h3>Cities</h3>
+            <p class="stat-number">47</p>
         </div>
-    </main>
+        
+        <div class="stat-box">
+            <span class="stat-emoji">⚡</span>
+            <h3>Status</h3>
+            <p class="stat-number" style="color: green;">Online</p>
+        </div>
+    </div>
+    
+    <div class="admin-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <a href="{{ url_for('main.chat') }}" class="action-btn">💬 Chat</a>
+            <a href="{{ url_for('main.map_view') }}" class="action-btn">🗺️ Map</a>
+            <a href="{{ url_for('main.analytics') }}" class="action-btn">📊 Analytics</a>
+            <a href="{{ url_for('main.admin_sms') }}" class="action-btn">📱 SMS</a>
+            <a href="{{ url_for('main.profile') }}" class="action-btn">👤 Profile</a>
+            <a href="{{ url_for('main.logout') }}" class="action-btn logout-btn">🚪 Logout</a>
+        </div>
+    </div>
+    
+    {% if users %}
+    <div class="admin-section">
+        <h2>👥 Registered Users</h2>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Location</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.location or 'N/A' }}</td>
+                    <td>{{ u.role }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    {% if chats %}
+    <div class="admin-section">
+        <h2>💬 Recent Chats</h2>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Message</th>
+                    <th>Intent</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for chat in chats[:20] %}
+                <tr>
+                    <td>{{ chat.user_id }}</td>
+                    <td>{{ chat.message[:50] }}...</td>
+                    <td>{{ chat.intent or 'N/A' }}</td>
+                    <td>{{ chat.timestamp.strftime('%m/%d %H:%M') if chat.timestamp else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
 </div>
 {% endblock %}
