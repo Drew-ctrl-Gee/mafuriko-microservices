@@ -1,4 +1,4 @@
-"""Flask Routes for MafurikoAI - Complete Version"""
+"""Flask Routes for MafurikoAI - Complete Version with Background Emails"""
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db, mail
@@ -17,6 +17,10 @@ weather_api = WeatherAPI()
 predictor = FloodPredictor()
 chatbot = Chatbot(predictor, weather_api)
 
+
+# ═══════════════════════════════════════════════════════════
+# HOME & SEO ROUTES
+# ═══════════════════════════════════════════════════════════
 
 @main.route('/')
 def index():
@@ -38,6 +42,10 @@ def sitemap():
     static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
     return send_from_directory(static_folder, 'sitemap.xml')
 
+
+# ═══════════════════════════════════════════════════════════
+# AUTHENTICATION ROUTES
+# ═══════════════════════════════════════════════════════════
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -109,13 +117,11 @@ def signup():
         
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
-            print(f"❌ Username already exists: {username}")
             flash('Username already taken', 'error')
             return redirect(url_for('main.signup'))
         
         existing_email = User.query.filter_by(email=email).first()
         if existing_email:
-            print(f"❌ Email already exists: {email}")
             flash('Email already registered', 'error')
             return redirect(url_for('main.signup'))
         
@@ -137,18 +143,21 @@ def signup():
             
             print(f"✅ User created: {username} (ID: {new_user.id})")
             
+            # Send welcome email in BACKGROUND (fast!)
             try:
-                msg = Message(
-                    subject="Welcome to MafurikoAI!",
-                    recipients=[email],
-                    body=f"Hello {username}!\n\nWelcome to MafurikoAI!\n\nStay safe!\nThe MafurikoAI Team"
+                from app.email_service import send_email_background, welcome_email_template
+                
+                html_content = welcome_email_template(username, location)
+                send_email_background(
+                    subject="🌧️ MafurikoAI - Welcome to MafurikoAI!",
+                    recipients=email,
+                    html_content=html_content
                 )
-                mail.send(msg)
-                print(f"✅ Welcome email sent to {email}")
+                print(f"📧 Welcome email queued for {email}")
             except Exception as e:
                 print(f"⚠️ Email error (non-critical): {str(e)}")
             
-            flash('Account created successfully! Please login.', 'success')
+            flash('Account created successfully! Please login. Check your email for details.', 'success')
             return redirect(url_for('main.login'))
             
         except Exception as e:
@@ -175,12 +184,15 @@ def forgot_password():
         
         if user:
             try:
-                msg = Message(
-                    subject="Reset Your MafurikoAI Password",
-                    recipients=[email],
-                    body=f"Hi {user.username},\n\nClick here to reset: https://mafuriko-web.onrender.com/login\n\nMafurikoAI Team"
+                from app.email_service import send_email_background, password_reset_email_template
+                
+                reset_link = f"https://mafuriko-web.onrender.com/login"
+                html_content = password_reset_email_template(user.username, reset_link)
+                send_email_background(
+                    subject="🔐 MafurikoAI - Reset Your Password",
+                    recipients=email,
+                    html_content=html_content
                 )
-                mail.send(msg)
                 flash('Password reset link sent to your email!', 'success')
             except Exception as e:
                 print(f"❌ Email error: {str(e)}")
@@ -192,6 +204,10 @@ def forgot_password():
     
     return render_template('forgot_password.html')
 
+
+# ═══════════════════════════════════════════════════════════
+# CHATBOT ROUTES (Commuters Only)
+# ═══════════════════════════════════════════════════════════
 
 @main.route('/chat')
 @login_required
@@ -224,6 +240,10 @@ def api_chat():
     
     return jsonify(response)
 
+
+# ═══════════════════════════════════════════════════════════
+# MAP ROUTES
+# ═══════════════════════════════════════════════════════════
 
 @main.route('/map')
 @login_required
@@ -270,11 +290,19 @@ def map_data():
     return jsonify(result)
 
 
+# ═══════════════════════════════════════════════════════════
+# ANALYTICS ROUTES
+# ═══════════════════════════════════════════════════════════
+
 @main.route('/analytics')
 @login_required
 def analytics():
     return render_template('analytics.html', user=current_user)
 
+
+# ═══════════════════════════════════════════════════════════
+# PROFILE ROUTES
+# ═══════════════════════════════════════════════════════════
 
 @main.route('/profile')
 @login_required
@@ -291,6 +319,10 @@ def update_profile():
     flash('Profile updated!', 'success')
     return redirect(url_for('main.profile'))
 
+
+# ═══════════════════════════════════════════════════════════
+# ADMIN ROUTES
+# ═══════════════════════════════════════════════════════════
 
 @main.route('/admin')
 @login_required
@@ -315,97 +347,10 @@ def admin_sms():
     return render_template('admin_sms.html', user=current_user)
 
 
-@main.route('/api/weather/<city>')
-def get_weather(city):
-    weather = weather_api.get_weather(city)
-    return jsonify(weather)
-
-@main.route('/admin/delete-user/<int:user_id>', methods=['POST'])
-@login_required
-def delete_user(user_id):
-    """Admin can delete a user and all their data"""
-    if current_user.role != 'admin':
-        flash('Access denied', 'error')
-        return redirect(url_for('main.chat'))
-    
-    if user_id == current_user.id:
-        flash('You cannot delete your own account!', 'error')
-        return redirect(url_for('main.admin'))
-    
-    user = User.query.get(user_id)
-    
-    if not user:
-        flash('User not found', 'error')
-        return redirect(url_for('main.admin'))
-    
-    try:
-        username = user.username
-        
-        # Delete ALL related records first
-        # 1. Delete user's chats
-        try:
-            Chat.query.filter_by(user_id=user_id).delete()
-            print(f"   Deleted chats for user {username}")
-        except Exception as e:
-            print(f"   Chat delete error: {str(e)}")
-        
-        # 2. Delete user's flood reports
-        try:
-            FloodReport.query.filter_by(user_id=user_id).delete()
-            print(f"   Deleted reports for user {username}")
-        except Exception as e:
-            print(f"   Report delete error: {str(e)}")
-        
-        # 3. Delete password resets (if table exists)
-        try:
-            from app.models import PasswordReset
-            PasswordReset.query.filter_by(user_id=user_id).delete()
-            print(f"   Deleted password resets for user {username}")
-        except Exception as e:
-            pass
-        
-        # 4. Now delete the user
-        db.session.delete(user)
-        db.session.commit()
-        
-        print(f"🗑️ Successfully deleted user: {username} (ID: {user_id})")
-        flash(f'User "{username}" has been deleted successfully!', 'success')
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"❌ Delete error: {str(e)}")
-        
-        # Try harder - force delete
-        try:
-            print("🔄 Trying force delete...")
-            
-            # Raw SQL delete for related records
-            db.session.execute(db.text(f"DELETE FROM chats WHERE user_id = {user_id}"))
-            db.session.execute(db.text(f"DELETE FROM flood_reports WHERE user_id = {user_id}"))
-            
-            # Try to delete password resets
-            try:
-                db.session.execute(db.text(f"DELETE FROM password_resets WHERE user_id = {user_id}"))
-            except:
-                pass
-            
-            # Delete the user
-            db.session.execute(db.text(f"DELETE FROM users WHERE id = {user_id}"))
-            db.session.commit()
-            
-            print(f"🗑️ Force deleted user: {username} (ID: {user_id})")
-            flash(f'User "{username}" has been deleted!', 'success')
-            
-        except Exception as e2:
-            db.session.rollback()
-            print(f"❌ Force delete also failed: {str(e2)}")
-            flash(f'Error: {str(e2)}', 'error')
-    
-    return redirect(url_for('main.admin'))
 @main.route('/admin/add-user', methods=['GET', 'POST'])
 @login_required
 def admin_add_user():
-    """Admin can add new users (commuters or admins)"""
+    """Admin can add new users"""
     if current_user.role != 'admin':
         flash('Access denied', 'error')
         return redirect(url_for('main.chat'))
@@ -457,19 +402,17 @@ def admin_add_user():
             
             print(f"✅ Admin created user: {username} (role: {role}, ID: {new_user.id})")
             
-            # Send beautiful admin-created account email
+            # Send account details email in BACKGROUND (fast!)
             try:
-                from app.email_service import admin_created_user_email_template
+                from app.email_service import send_email_background, admin_created_user_email_template
                 
                 html_content = admin_created_user_email_template(username, password, role, location)
-                
-                msg = Message(
+                send_email_background(
                     subject="🌧️ MafurikoAI - Your Account Has Been Created!",
-                    recipients=[email],
-                    html=html_content
+                    recipients=email,
+                    html_content=html_content
                 )
-                mail.send(msg)
-                print(f"✅ Account details emailed to {email}")
+                print(f"📧 Account email queued for {email}")
             except Exception as e:
                 print(f"⚠️ Email error: {str(e)}")
             
@@ -479,69 +422,120 @@ def admin_add_user():
         except Exception as e:
             db.session.rollback()
             print(f"❌ Error creating user: {str(e)}")
-            flash('Error creating user. Please try again.', 'error')
+            flash('Error creating user.', 'error')
             return redirect(url_for('main.admin_add_user'))
     
     return render_template('admin_add_user.html', user=current_user)
 
 
-@main.route('/admin/change-role/<int:user_id>', methods=['POST'])
+@main.route('/admin/delete-user/<int:user_id>', methods=['POST'])
 @login_required
-def change_user_role(user_id):
-    """Admin can change a user's role"""
+def delete_user(user_id):
+    """Admin can delete a user"""
     if current_user.role != 'admin':
-        flash('Access denied', 'error')
         return redirect(url_for('main.chat'))
     
-    # Prevent changing own role
     if user_id == current_user.id:
-        flash('You cannot change your own role!', 'error')
+        flash('You cannot delete yourself!', 'error')
         return redirect(url_for('main.admin'))
     
     user = User.query.get(user_id)
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.admin'))
     
+    try:
+        username = user.username
+        
+        try:
+            Chat.query.filter_by(user_id=user_id).delete()
+        except:
+            pass
+        
+        try:
+            FloodReport.query.filter_by(user_id=user_id).delete()
+        except:
+            pass
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        print(f"🗑️ Deleted user: {username}")
+        flash(f'User "{username}" deleted!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Delete error: {str(e)}")
+        
+        try:
+            db.session.execute(db.text(f"DELETE FROM chats WHERE user_id = {user_id}"))
+            db.session.execute(db.text(f"DELETE FROM flood_reports WHERE user_id = {user_id}"))
+            db.session.execute(db.text(f"DELETE FROM users WHERE id = {user_id}"))
+            db.session.commit()
+            flash(f'User deleted!', 'success')
+        except Exception as e2:
+            db.session.rollback()
+            flash(f'Error: {str(e2)}', 'error')
+    
+    return redirect(url_for('main.admin'))
+
+
+@main.route('/admin/change-role/<int:user_id>', methods=['POST'])
+@login_required
+def change_user_role(user_id):
+    """Admin can change user roles"""
+    if current_user.role != 'admin':
+        return redirect(url_for('main.chat'))
+    
+    if user_id == current_user.id:
+        flash('Cannot change your own role!', 'error')
+        return redirect(url_for('main.admin'))
+    
+    user = User.query.get(user_id)
     if not user:
         flash('User not found', 'error')
         return redirect(url_for('main.admin'))
     
     new_role = request.form.get('role', 'commuter')
-    
     if new_role not in ['commuter', 'admin']:
-        flash('Invalid role', 'error')
-        return redirect(url_for('main.admin'))
+        new_role = 'commuter'
     
     try:
         old_role = user.role
         user.role = new_role
         db.session.commit()
-        
-        print(f"🔄 Admin changed {user.username} role: {old_role} → {new_role}")
-        flash(f'User "{user.username}" role changed to {new_role}!', 'success')
-        
+        print(f"🔄 Changed {user.username}: {old_role} → {new_role}")
+        flash(f'"{user.username}" is now {new_role}!', 'success')
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error changing role: {str(e)}")
         flash('Error changing role.', 'error')
     
     return redirect(url_for('main.admin'))
 
+
+# ═══════════════════════════════════════════════════════════
+# WEATHER API ROUTES
+# ═══════════════════════════════════════════════════════════
+
+@main.route('/api/weather/<city>')
+def get_weather(city):
+    weather = weather_api.get_weather(city)
+    return jsonify(weather)
+
+
+# ═══════════════════════════════════════════════════════════
+# DEBUG ROUTE (Remove in production!)
+# ═══════════════════════════════════════════════════════════
+
 @main.route('/debug/users')
 def debug_users():
     users = User.query.all()
-    
     html = "<h1>Database Users</h1>"
     html += f"<p><strong>Total: {len(users)}</strong></p>"
-    
-    if not users:
-        html += "<p style='color:red;'>NO USERS!</p>"
-    else:
-        for user in users:
-            html += f"<div style='border:1px solid #ccc; padding:10px; margin:10px;'>"
-            html += f"<strong>ID:</strong> {user.id}<br>"
-            html += f"<strong>Username:</strong> {user.username}<br>"
-            html += f"<strong>Email:</strong> {user.email}<br>"
-            html += f"<strong>Role:</strong> {user.role}<br>"
-            html += f"<strong>Location:</strong> {user.location}<br>"
-            html += f"</div>"
-    
+    for user in users:
+        html += f"<div style='border:1px solid #ccc; padding:10px; margin:10px;'>"
+        html += f"<strong>ID:</strong> {user.id} | "
+        html += f"<strong>Username:</strong> {user.username} | "
+        html += f"<strong>Email:</strong> {user.email} | "
+        html += f"<strong>Role:</strong> {user.role}</div>"
     return html
