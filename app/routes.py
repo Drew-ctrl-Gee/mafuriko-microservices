@@ -323,12 +323,11 @@ def get_weather(city):
 @main.route('/admin/delete-user/<int:user_id>', methods=['POST'])
 @login_required
 def delete_user(user_id):
-    """Admin can delete a user"""
+    """Admin can delete a user and all their data"""
     if current_user.role != 'admin':
         flash('Access denied', 'error')
         return redirect(url_for('main.chat'))
     
-    # Prevent admin from deleting themselves
     if user_id == current_user.id:
         flash('You cannot delete your own account!', 'error')
         return redirect(url_for('main.admin'))
@@ -342,20 +341,65 @@ def delete_user(user_id):
     try:
         username = user.username
         
-        # Delete user's chats first
-        Chat.query.filter_by(user_id=user_id).delete()
+        # Delete ALL related records first
+        # 1. Delete user's chats
+        try:
+            Chat.query.filter_by(user_id=user_id).delete()
+            print(f"   Deleted chats for user {username}")
+        except Exception as e:
+            print(f"   Chat delete error: {str(e)}")
         
-        # Delete the user
+        # 2. Delete user's flood reports
+        try:
+            FloodReport.query.filter_by(user_id=user_id).delete()
+            print(f"   Deleted reports for user {username}")
+        except Exception as e:
+            print(f"   Report delete error: {str(e)}")
+        
+        # 3. Delete password resets (if table exists)
+        try:
+            from app.models import PasswordReset
+            PasswordReset.query.filter_by(user_id=user_id).delete()
+            print(f"   Deleted password resets for user {username}")
+        except Exception as e:
+            pass
+        
+        # 4. Now delete the user
         db.session.delete(user)
         db.session.commit()
         
-        print(f"🗑️ Admin deleted user: {username} (ID: {user_id})")
+        print(f"🗑️ Successfully deleted user: {username} (ID: {user_id})")
         flash(f'User "{username}" has been deleted successfully!', 'success')
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error deleting user: {str(e)}")
-        flash('Error deleting user. Please try again.', 'error')
+        print(f"❌ Delete error: {str(e)}")
+        
+        # Try harder - force delete
+        try:
+            print("🔄 Trying force delete...")
+            
+            # Raw SQL delete for related records
+            db.session.execute(db.text(f"DELETE FROM chats WHERE user_id = {user_id}"))
+            db.session.execute(db.text(f"DELETE FROM flood_reports WHERE user_id = {user_id}"))
+            
+            # Try to delete password resets
+            try:
+                db.session.execute(db.text(f"DELETE FROM password_resets WHERE user_id = {user_id}"))
+            except:
+                pass
+            
+            # Delete the user
+            db.session.execute(db.text(f"DELETE FROM users WHERE id = {user_id}"))
+            db.session.commit()
+            
+            print(f"🗑️ Force deleted user: {username} (ID: {user_id})")
+            flash(f'User "{username}" has been deleted!', 'success')
+            
+        except Exception as e2:
+            db.session.rollback()
+            print(f"❌ Force delete also failed: {str(e2)}")
+            flash(f'Error: {str(e2)}', 'error')
     
     return redirect(url_for('main.admin'))
 @main.route('/admin/add-user', methods=['GET', 'POST'])
@@ -376,7 +420,6 @@ def admin_add_user():
         
         print(f"👨‍💼 Admin adding user: {username} (role: {role})")
         
-        # Validation
         if not username or not email or not password:
             flash('Please fill all required fields', 'error')
             return redirect(url_for('main.admin_add_user'))
@@ -385,11 +428,9 @@ def admin_add_user():
             flash('Password must be at least 6 characters', 'error')
             return redirect(url_for('main.admin_add_user'))
         
-        # Make sure role is valid
         if role not in ['commuter', 'admin']:
             role = 'commuter'
         
-        # Check if user exists
         if User.query.filter_by(username=username).first():
             flash('Username already taken', 'error')
             return redirect(url_for('main.admin_add_user'))
@@ -416,12 +457,16 @@ def admin_add_user():
             
             print(f"✅ Admin created user: {username} (role: {role}, ID: {new_user.id})")
             
-            # Send welcome email
+            # Send beautiful admin-created account email
             try:
+                from app.email_service import admin_created_user_email_template
+                
+                html_content = admin_created_user_email_template(username, password, role, location)
+                
                 msg = Message(
-                    subject="Welcome to MafurikoAI!",
+                    subject="🌧️ MafurikoAI - Your Account Has Been Created!",
                     recipients=[email],
-                    body=f"Hello {username}!\n\nAn admin has created your MafurikoAI account.\n\nUsername: {username}\nPassword: {password}\nRole: {role}\n\nLogin at: https://mafuriko-web.onrender.com/login\n\nPlease change your password after first login.\n\nStay safe!\nMafurikoAI Team"
+                    html=html_content
                 )
                 mail.send(msg)
                 print(f"✅ Account details emailed to {email}")

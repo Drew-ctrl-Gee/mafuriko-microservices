@@ -26,7 +26,7 @@ class User(UserMixin, db.Model):
     last_login = db.Column(db.DateTime)
     
     chats = db.relationship('Chat', backref='user', lazy='dynamic', cascade='all, delete-orphan')
-    reports = db.relationship('FloodReport', backref='user', lazy='dynamic')
+    reports = db.relationship('FloodReport', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<User {self.username}>'
