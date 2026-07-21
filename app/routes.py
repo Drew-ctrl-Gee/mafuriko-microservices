@@ -358,6 +358,127 @@ def delete_user(user_id):
         flash('Error deleting user. Please try again.', 'error')
     
     return redirect(url_for('main.admin'))
+@main.route('/admin/add-user', methods=['GET', 'POST'])
+@login_required
+def admin_add_user():
+    """Admin can add new users (commuters or admins)"""
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('main.chat'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '').strip()
+        location = request.form.get('location', 'Nairobi')
+        role = request.form.get('role', 'commuter')
+        
+        print(f"👨‍💼 Admin adding user: {username} (role: {role})")
+        
+        # Validation
+        if not username or not email or not password:
+            flash('Please fill all required fields', 'error')
+            return redirect(url_for('main.admin_add_user'))
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters', 'error')
+            return redirect(url_for('main.admin_add_user'))
+        
+        # Make sure role is valid
+        if role not in ['commuter', 'admin']:
+            role = 'commuter'
+        
+        # Check if user exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already taken', 'error')
+            return redirect(url_for('main.admin_add_user'))
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered', 'error')
+            return redirect(url_for('main.admin_add_user'))
+        
+        try:
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            
+            new_user = User(
+                username=username,
+                email=email,
+                phone=phone,
+                password_hash=hashed_password.decode('utf-8'),
+                location=location,
+                role=role,
+                language='en'
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            print(f"✅ Admin created user: {username} (role: {role}, ID: {new_user.id})")
+            
+            # Send welcome email
+            try:
+                msg = Message(
+                    subject="Welcome to MafurikoAI!",
+                    recipients=[email],
+                    body=f"Hello {username}!\n\nAn admin has created your MafurikoAI account.\n\nUsername: {username}\nPassword: {password}\nRole: {role}\n\nLogin at: https://mafuriko-web.onrender.com/login\n\nPlease change your password after first login.\n\nStay safe!\nMafurikoAI Team"
+                )
+                mail.send(msg)
+                print(f"✅ Account details emailed to {email}")
+            except Exception as e:
+                print(f"⚠️ Email error: {str(e)}")
+            
+            flash(f'User "{username}" created as {role} successfully!', 'success')
+            return redirect(url_for('main.admin'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error creating user: {str(e)}")
+            flash('Error creating user. Please try again.', 'error')
+            return redirect(url_for('main.admin_add_user'))
+    
+    return render_template('admin_add_user.html', user=current_user)
+
+
+@main.route('/admin/change-role/<int:user_id>', methods=['POST'])
+@login_required
+def change_user_role(user_id):
+    """Admin can change a user's role"""
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('main.chat'))
+    
+    # Prevent changing own role
+    if user_id == current_user.id:
+        flash('You cannot change your own role!', 'error')
+        return redirect(url_for('main.admin'))
+    
+    user = User.query.get(user_id)
+    
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.admin'))
+    
+    new_role = request.form.get('role', 'commuter')
+    
+    if new_role not in ['commuter', 'admin']:
+        flash('Invalid role', 'error')
+        return redirect(url_for('main.admin'))
+    
+    try:
+        old_role = user.role
+        user.role = new_role
+        db.session.commit()
+        
+        print(f"🔄 Admin changed {user.username} role: {old_role} → {new_role}")
+        flash(f'User "{user.username}" role changed to {new_role}!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error changing role: {str(e)}")
+        flash('Error changing role.', 'error')
+    
+    return redirect(url_for('main.admin'))
 
 @main.route('/debug/users')
 def debug_users():

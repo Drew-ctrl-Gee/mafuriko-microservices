@@ -39,6 +39,9 @@
    <div class="admin-actions">
     <h2>Quick Actions</h2>
     <div class="action-buttons">
+        <a href="{{ url_for('main.admin_add_user') }}" class="action-btn" style="background: linear-gradient(135deg, #00b09b, #96c93d);">
+            ➕ Add User
+        </a>
         <a href="{{ url_for('main.map_view') }}" class="action-btn">🗺️ Map</a>
         <a href="{{ url_for('main.analytics') }}" class="action-btn">📊 Analytics</a>
         <a href="{{ url_for('main.admin_sms') }}" class="action-btn">📱 SMS</a>
@@ -46,16 +49,18 @@
         <a href="{{ url_for('main.logout') }}" class="action-btn logout-btn">🚪 Logout</a>
     </div>
 </div>
+</div>
     
     {% if users %}
 <div class="admin-section">
-    <h2>👥 Registered Users</h2>
+    <h2>👥 Registered Users ({{ users|length }})</h2>
     <table class="admin-table">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Username</th>
                 <th>Email</th>
+                <th>Phone</th>
                 <th>Location</th>
                 <th>Role</th>
                 <th>Joined</th>
@@ -68,20 +73,48 @@
                 <td>{{ u.id }}</td>
                 <td>{{ u.username }}</td>
                 <td>{{ u.email }}</td>
+                <td>{{ u.phone or 'N/A' }}</td>
                 <td>{{ u.location or 'N/A' }}</td>
-                <td>{{ u.role }}</td>
+                <td>
+                    {% if u.role == 'admin' %}
+                    <span style="background: #4facfe; color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px;">👨‍💼 Admin</span>
+                    {% else %}
+                    <span style="background: #4CAF50; color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px;">👤 Commuter</span>
+                    {% endif %}
+                </td>
                 <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else 'N/A' }}</td>
                 <td>
-                    {% if u.role != 'admin' %}
-                    <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" 
-                          style="display: inline;"
-                          onsubmit="return confirm('Are you sure you want to delete user {{ u.username }}? This cannot be undone!');">
-                        <button type="submit" style="background: #f44336; color: white; border: none; padding: 6px 15px; border-radius: 5px; cursor: pointer; font-size: 13px;">
-                            🗑️ Delete
-                        </button>
-                    </form>
+                    {% if u.id != current_user.id %}
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        
+                        <!-- Change Role -->
+                        <form method="POST" action="{{ url_for('main.change_user_role', user_id=u.id) }}" style="display: inline;">
+                            {% if u.role == 'commuter' %}
+                            <input type="hidden" name="role" value="admin">
+                            <button type="submit" onclick="return confirm('Make {{ u.username }} an admin?')"
+                                    style="background: #4facfe; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                                ⬆️ Make Admin
+                            </button>
+                            {% else %}
+                            <input type="hidden" name="role" value="commuter">
+                            <button type="submit" onclick="return confirm('Remove admin rights from {{ u.username }}?')"
+                                    style="background: #ff9800; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                                ⬇️ Make Commuter
+                            </button>
+                            {% endif %}
+                        </form>
+                        
+                        <!-- Delete User -->
+                        <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" style="display: inline;">
+                            <button type="submit" onclick="return confirm('DELETE user {{ u.username }}? This cannot be undone!')"
+                                    style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                                🗑️ Delete
+                            </button>
+                        </form>
+                        
+                    </div>
                     {% else %}
-                    <span style="color: #888; font-size: 13px;">Protected</span>
+                    <span style="color: #888; font-size: 12px;">👑 You (Protected)</span>
                     {% endif %}
                 </td>
             </tr>
