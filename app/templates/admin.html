@@ -48,32 +48,48 @@
 </div>
     
     {% if users %}
-    <div class="admin-section">
-        <h2>👥 Registered Users</h2>
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Location</th>
-                    <th>Role</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in users %}
-                <tr>
-                    <td>{{ u.id }}</td>
-                    <td>{{ u.username }}</td>
-                    <td>{{ u.email }}</td>
-                    <td>{{ u.location or 'N/A' }}</td>
-                    <td>{{ u.role }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
+<div class="admin-section">
+    <h2>👥 Registered Users</h2>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Location</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.location or 'N/A' }}</td>
+                <td>{{ u.role }}</td>
+                <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else 'N/A' }}</td>
+                <td>
+                    {% if u.role != 'admin' %}
+                    <form method="POST" action="{{ url_for('main.delete_user', user_id=u.id) }}" 
+                          style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete user {{ u.username }}? This cannot be undone!');">
+                        <button type="submit" style="background: #f44336; color: white; border: none; padding: 6px 15px; border-radius: 5px; cursor: pointer; font-size: 13px;">
+                            🗑️ Delete
+                        </button>
+                    </form>
+                    {% else %}
+                    <span style="color: #888; font-size: 13px;">Protected</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
     
     {% if chats %}
     <div class="admin-section">

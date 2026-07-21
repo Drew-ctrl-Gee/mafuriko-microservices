@@ -320,6 +320,44 @@ def get_weather(city):
     weather = weather_api.get_weather(city)
     return jsonify(weather)
 
+@main.route('/admin/delete-user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    """Admin can delete a user"""
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('main.chat'))
+    
+    # Prevent admin from deleting themselves
+    if user_id == current_user.id:
+        flash('You cannot delete your own account!', 'error')
+        return redirect(url_for('main.admin'))
+    
+    user = User.query.get(user_id)
+    
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.admin'))
+    
+    try:
+        username = user.username
+        
+        # Delete user's chats first
+        Chat.query.filter_by(user_id=user_id).delete()
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        
+        print(f"🗑️ Admin deleted user: {username} (ID: {user_id})")
+        flash(f'User "{username}" has been deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error deleting user: {str(e)}")
+        flash('Error deleting user. Please try again.', 'error')
+    
+    return redirect(url_for('main.admin'))
 
 @main.route('/debug/users')
 def debug_users():
