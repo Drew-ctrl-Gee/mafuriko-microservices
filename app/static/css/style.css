@@ -785,3 +785,225 @@ body {
     background: linear-gradient(135deg, #4facfe, #00f2fe);
     border-radius: 4px;
 }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE RESPONSIVE STYLES
+   ═══════════════════════════════════════════════════════ */
+
+/* Tablets and below (768px) */
+@media (max-width: 768px) {
+    /* General */
+    body {
+        font-size: 14px;
+    }
+    
+    .container {
+        padding: 10px;
+        max-width: 100%;
+    }
+    
+    /* Login/Signup Cards */
+    .auth-card {
+        padding: 20px;
+        margin: 10px;
+        max-width: 100%;
+    }
+    
+    .auth-logo {
+        text-align: center;
+    }
+    
+    .logo-icon {
+        font-size: 3em;
+    }
+    
+    .logo-text {
+        font-size: 1.8em;
+    }
+    
+    /* Forms */
+    .input-group input,
+    .input-group select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px;
+    }
+    
+    .btn-primary {
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    /* Chat Layout */
+    .chat-layout {
+        flex-direction: column;
+        height: 100vh;
+    }
+    
+    .sidebar {
+        width: 100%;
+        max-height: 60px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .sidebar.expanded {
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar-menu {
+        padding: 10px;
+    }
+    
+    .chat-main {
+        width: 100%;
+        height: calc(100vh - 60px);
+    }
+    
+    /* Chat Messages */
+    .chat-messages {
+        padding: 15px;
+    }
+    
+    .message-content {
+        max-width: 85%;
+        font-size: 14px;
+    }
+    
+    .message-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+    
+    /* Input Area */
+    .chat-input-wrapper {
+        padding: 10px;
+    }
+    
+    .chat-input-wrapper input {
+        font-size: 16px;
+    }
+    
+    .voice-btn, .send-btn {
+        min-width: 40px;
+        min-height: 40px;
+    }
+    
+    /* Map */
+    #kenyaMap {
+        height: 400px !important;
+    }
+    
+    /* Analytics */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    /* Admin Dashboard */
+    .admin-dashboard {
+        padding: 15px;
+    }
+    
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 8px;
+    }
+}
+
+/* Mobile phones (480px and below) */
+@media (max-width: 480px) {
+    .logo-text {
+        font-size: 1.5em;
+    }
+    
+    .auth-card {
+        padding: 15px;
+    }
+    
+    .message-content {
+        max-width: 90%;
+    }
+    
+    /* Hide non-essential elements */
+    .desktop-only {
+        display: none;
+    }
+    
+    /* Mobile menu button */
+    .mobile-menu-btn {
+        display: block !important;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 1000;
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+}
+
+/* Landscape mode */
+@media (max-height: 500px) and (orientation: landscape) {
+    .sidebar {
+        display: none;
+    }
+    
+    .chat-main {
+        width: 100%;
+        height: 100vh;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 320px) {
+    body {
+        font-size: 12px;
+    }
+    
+    .btn-primary {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* Ensure touch targets are large enough */
+button, a.button, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Prevent horizontal scroll */
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+/* Better tap targets */
+.menu-item {
+    padding: 12px 15px;
+    display: block;
+}
+
+/* Loading spinner for mobile */
+.loading-mobile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    font-size: 24px;
+}
