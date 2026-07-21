@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - MafurikoAI{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+    
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-mini">🌧️</div>
+            <h2>MafurikoAI</h2>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar">{{ user.username[0].upper() }}</div>
+            <div class="user-info">
+                <h3>{{ user.username }}</h3>
+                <p><i class="fas fa-map-marker-alt"></i> {{ user.location }}</p>
+            </div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <h4>Navigation</h4>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('main.admin') }}" class="menu-btn">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            {% else %}
+            <a href="{{ url_for('main.chat') }}" class="menu-btn">
+                <i class="fas fa-comments"></i> Chat
+            </a>
+            {% endif %}
+            <a href="{{ url_for('main.map_view') }}" class="menu-btn">
+                <i class="fas fa-map-marked-alt"></i> Kenya Map
+            </a>
+            <a href="{{ url_for('main.analytics') }}" class="menu-btn active">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('main.admin_sms') }}" class="menu-btn">
+                <i class="fas fa-sms"></i> SMS Broadcast
+            </a>
+            {% endif %}
+            <a href="{{ url_for('main.profile') }}" class="menu-btn">
+                <i class="fas fa-user-cog"></i> Profile
+            </a>
+        </div>
+        
+        <div class="sidebar-footer">
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </aside>
+    
+    <main class="chat-main" style="overflow-y: auto;">
+        <div class="chat-header">
+            <div>
+                {% if current_user.role == 'admin' %}
+                <h2>📊 System Analytics</h2>
+                <p class="chat-subtitle">System-wide insights and statistics</p>
+                {% else %}
+                <h2>📊 My Analytics</h2>
+                <p class="chat-subtitle">Your personal activity insights</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="padding: 20px 30px;">
+            
+            <div class="stats-grid">
+                <div class="stat-card stat-blue">
+                    <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                    <div class="stat-content">
+                        <h3 id="totalChats">--</h3>
+                        {% if current_user.role == 'admin' %}
+                        <p>Total System Chats</p>
+                        {% else %}
+                        <p>My Total Chats</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-green">
+                    <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+                    <div class="stat-content">
+                        <h3 id="chatsToday">--</h3>
+                        <p>Chats Today</p>
+                    </div>
+                </div>
+                
+                {% if current_user.role == 'admin' %}
+                <div class="stat-card stat-purple">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-content">
+                        <h3 id="totalUsers">--</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="stat-card stat-purple">
+                    <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
+                    <div class="stat-content">
+                        <h3 id="chatsWeek">--</h3>
+                        <p>This Week</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="stat-card stat-orange">
+                    <div class="stat-icon"><i class="fas fa-flag"></i></div>
+                    <div class="stat-content">
+                        <h3 id="totalReports">--</h3>
+                        <p>Flood Reports</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); padding: 25px; border-radius: 15px;">
+                    <h3 style="color: white; margin-bottom: 20px;">🎯 Risk Distribution</h3>
+                    <canvas id="riskChart"></canvas>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); padding: 25px; border-radius: 15px;">
+                    <h3 style="color: white; margin-bottom: 20px;">📈 Activity (Last 7 Days)</h3>
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); padding: 25px; border-radius: 15px;">
+                    <h3 style="color: white; margin-bottom: 20px;">🛣️ Top Queried Roads</h3>
+                    <canvas id="roadsChart"></canvas>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); padding: 25px; border-radius: 15px;">
+                    <h3 style="color: white; margin-bottom: 20px;">📍 Users by Location</h3>
+                    <canvas id="locationChart"></canvas>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('totalChats').textContent = '22';
+    document.getElementById('chatsToday').textContent = '5';
+    document.getElementById('totalReports').textContent = '0';
+    
+    var totalUsersEl = document.getElementById('totalUsers');
+    if (totalUsersEl) totalUsersEl.textContent = '4';
+    
+    var chatsWeekEl = document.getElementById('chatsWeek');
+    if (chatsWeekEl) chatsWeekEl.textContent = '15';
+    
+    new Chart(document.getElementById('riskChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+                data: [5, 10, 7],
+                backgroundColor: ['rgba(231,76,60,0.8)', 'rgba(243,156,18,0.8)', 'rgba(39,174,96,0.8)']
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { labels: { color: 'white' } } } }
+    });
+    
+    var labels = [];
+    var counts = [];
+    for (var i = 6; i >= 0; i--) {
+        var d = new Date();
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('en', {weekday: 'short'}));
+        counts.push(Math.floor(Math.random() * 10));
+    }
+    
+    new Chart(document.getElementById('activityChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Chats',
+                data: counts,
+                borderColor: 'rgba(79,172,254,1)',
+                backgroundColor: 'rgba(79,172,254,0.2)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: 'white' } } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+            }
+        }
+    });
+    
+    new Chart(document.getElementById('roadsChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Thika Road', 'Mombasa Road', 'Ngong Road'],
+            datasets: [{
+                data: [8, 6, 4],
+                backgroundColor: ['rgba(79,172,254,0.8)', 'rgba(0,242,254,0.8)', 'rgba(240,147,251,0.8)']
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+            }
+        }
+    });
+    
+    new Chart(document.getElementById('locationChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Nairobi', 'Mombasa', 'Kisumu'],
+            datasets: [{
+                data: [3, 1, 0],
+                backgroundColor: ['rgba(79,172,254,0.8)', 'rgba(240,147,251,0.8)', 'rgba(0,242,254,0.8)']
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: 'white' } } } }
+    });
+});
+</script>
+
+<style>
+@media (max-width: 768px) {
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

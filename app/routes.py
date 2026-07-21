@@ -273,9 +273,7 @@ def map_data():
 @main.route('/analytics')
 @login_required
 def analytics():
-    if current_user.role == 'admin':
-        return render_template('admin_analytics.html', user=current_user)
-    return render_template('user_analytics.html', user=current_user)
+    return render_template('analytics.html', user=current_user)
 
 
 @main.route('/profile')
